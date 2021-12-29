@@ -4,22 +4,34 @@ import erc20Abi from '../contract/erc20.abi.json'
 import chatAbi from '../contract/chat.abi.json'
 import {MDCTextField} from '@material/textfield';
 import {MDCRipple} from '@material/ripple';
+import {MDCDialog} from '@material/dialog';
+import BigNumber from "bignumber.js";
 
 let kit
 let contract
 let isMatched = false
 let isWaiting
+let isTransacting
+let lastMessages
 const ERC20_DECIMALS = 18
-const MPContractAddress = "0x2C1F1ce45c9bD9c82F640183D9E8948782Fb40D8"
+const chatContractAddress = "0x02ef2b5CaC2e023d0771900C34942af4d0c55798"
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"
 const messageLog = document.querySelector(".log")
-const messageField = document.querySelector(".mdc-text-field__input")
-const submitButton = document.querySelector(".mdc-fab")
+const messageField = document.querySelector("[aria-labelledby=chat-message-label]")
+const paymentField = document.querySelector("[aria-labelledby=price-label]")
+const sendButton = document.querySelector("#sendBtn")
+const payButton = document.querySelector("#payBtn")
 
 // noinspection JSCheckFunctionSignatures
-new MDCTextField(document.querySelector('.mdc-text-field'));
+new MDCTextField(document.querySelectorAll('.mdc-text-field')[0]);
 // noinspection JSCheckFunctionSignatures
-new MDCRipple(submitButton);
+new MDCTextField(document.querySelectorAll('.mdc-text-field')[1]);
+// noinspection JSCheckFunctionSignatures
+new MDCRipple(sendButton);
+// noinspection JSCheckFunctionSignatures
+new MDCRipple(payButton);
+// noinspection JSCheckFunctionSignatures
+const dialog = new MDCDialog(document.querySelector('.mdc-dialog'));
 
 // connect the Celo wallet
 const connectCeloWallet = async () => {
@@ -33,7 +45,7 @@ const connectCeloWallet = async () => {
             let accounts = await kit.web3.eth.getAccounts()
             kit.defaultAccount = accounts[0]
             document.querySelector("#youPicture").innerHTML = identiconTemplate(kit.defaultAccount)
-            contract = new kit.web3.eth.Contract(chatAbi, MPContractAddress)
+            contract = new kit.web3.eth.Contract(chatAbi, chatContractAddress)
             // ugly account switching as I couldn't figure out how to do it with celo
             setInterval(async () => {
                 accounts = await kit.web3.eth.getAccounts()
@@ -43,9 +55,30 @@ const connectCeloWallet = async () => {
             }, 1000)
         } catch (error) {
             console.log(`⚠️ ${error}.`)
+            document.querySelector("#status").textContent = "Please install the CeloExtensionWallet"
         }
     } else {
-        console.log("⚠️ Please install the CeloExtensionWallet.")
+        document.querySelector("#status").textContent = "Please install the CeloExtensionWallet"
+    }
+}
+
+// write messages to chat log
+const renderMessages = (messages) => {
+    let messagesString = ""
+    messages.forEach((_message) => {
+        const payment = _message.text.slice(0, 6) === 'cUSD--'
+        if (payment){
+            _message.text = new BigNumber(_message.text.slice(6))
+            _message.text = _message.text.shiftedBy(-ERC20_DECIMALS) + "$"
+        }
+        messagesString += `<div class="message ${_message.sender}${payment ? ' payment' : ''}">${_message.text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/"/g, '&quot;')}</div>`
+    })
+    if (messagesString !== lastMessages) {
+        lastMessages = messagesString
+        messageLog.innerHTML = messagesString
     }
 }
 
@@ -77,11 +110,17 @@ const getMessages = async () => {
         _messages.push(_message)
     }
     _messages = await Promise.all(_messages)
+
     renderMessages(_messages.sort(function (x, y) {
         return x.timestamp - y.timestamp;
     }))
 }
 
+// refresh messages every second
+const messagesRefresh = async () => {
+    await getMessages()
+    setTimeout(messagesRefresh, 1000)
+}
 
 // get balance of Celo and cUSD from wallet and write it to screen
 const getBalance = async function () {
@@ -92,15 +131,6 @@ const getBalance = async function () {
         "cUSD: " + totalBalance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2)
 }
 
-// write messages to chat log
-const renderMessages = (messages) => {
-    messageLog.innerHTML = ""
-    messages.forEach((_message) => {
-        const message = document.createElement("div")
-        message.innerHTML = `<div class="message ${_message.sender}">${_message.text}</div>`
-        messageLog.appendChild(message.firstChild)
-    })
-}
 
 // template for identification of an address
 const identiconTemplate = (_address) => {
@@ -125,14 +155,12 @@ const assignAddress = async () => {
     isWaiting = true
     document.querySelector("#status").textContent = "Waiting for address match with"
     document.querySelector("#topBtn").disabled = true
-    const status = await contract.methods.assignAddress().send({from: kit.defaultAccount})
-    console.log(status)
+    await contract.methods.assignAddress().send({from: kit.defaultAccount})
 }
 
 // remove matched address
 const removeMatch = async () => {
     await contract.methods.removeMatch().send({from: kit.defaultAccount})
-    await checkAddressAssignment()
 }
 
 // checks if address is assigned to another address,
@@ -140,33 +168,49 @@ const removeMatch = async () => {
 // changes the status button to reflect that
 const checkAddressAssignment = async () => {
     const assignment = await contract.methods.isAddressAssigned().call()
+    if (isTransacting) {
+        setTimeout(checkAddressAssignment, 1000)
+        return
+    }
+
     if (assignment) {
         const matchedAddress = await contract.methods.getAssignedAddress().call()
-        document.querySelector("#otherPicture").innerHTML =
-            identiconTemplate(matchedAddress)
+        if (document.querySelector("#otherPicture").innerHTML !== identiconTemplate(matchedAddress)) {
+            document.querySelector("#otherPicture").innerHTML =
+                identiconTemplate(matchedAddress)
+        }
         document.querySelector("#status").textContent = "Unmatch with " + matchedAddress
         document.querySelector("#topBtn").disabled = false
-        submitButton.style.display = ''
+        sendButton.style.display = ''
+        payButton.style.display = ''
         messageField.disabled = false
         document.querySelector(".chat-field").classList.remove("mdc-text-field--disabled")
         isMatched = true
-    } else if (isWaiting) {
+        setTimeout(checkAddressAssignment, 1000)
+        return
+    }
+    if (isWaiting) {
         document.querySelector("#otherPicture").innerHTML = ""
         document.querySelector("#status").textContent = "Waiting for address match with"
         document.querySelector("#topBtn").disabled = true
-        submitButton.style.display = 'none'
+        sendButton.style.display = 'none'
+        payButton.style.display = 'none'
         messageField.disabled = true
         isMatched = false
-    } else {
-        document.querySelector("#otherPicture").innerHTML = ""
-        document.querySelector("#status").textContent = "Announce that you want a partner"
-        document.querySelector("#topBtn").disabled = false
-        submitButton.style.display = 'none'
-        messageField.disabled = true
-        isMatched = false
-        isWaiting = false
+        setTimeout(checkAddressAssignment, 1000)
+        return
     }
-    setTimeout(checkAddressAssignment, 10000)
+
+    document.querySelector("#otherPicture").innerHTML = ""
+    document.querySelector("#status").textContent = "Announce that you want a partner"
+    document.querySelector("#topBtn").disabled = false
+    sendButton.style.display = 'none'
+    payButton.style.display = 'none'
+    messageField.disabled = true
+    isMatched = false
+    isWaiting = false
+    setTimeout(checkAddressAssignment, 1000)
+
 }
 
 
@@ -174,7 +218,7 @@ const approve = async (_price) => {
     const cUSDContract = new kit.web3.eth.Contract(erc20Abi, cUSDContractAddress)
 
     return await cUSDContract.methods
-        .approve(MPContractAddress, _price)
+        .approve(chatContractAddress, _price)
         .send({from: kit.defaultAccount})
 }
 
@@ -191,68 +235,71 @@ document.querySelector("#topBtn").addEventListener("click", async () => {
 })
 
 // sends a message on click of the send button
-submitButton.addEventListener("click", async () => {
+sendButton.addEventListener("click", async () => {
     if (messageField.value) {
         console.log('⌛ Sending message...')
-        submitButton.style.display = 'none'
+        sendButton.style.display = 'none'
+        payButton.style.display = 'none'
         messageField.disabled = true
+        isTransacting = true
         try {
             await contract.methods
                 .writeMessage(messageField.value)
                 .send({from: kit.defaultAccount})
-            submitButton.style.display = ''
-            messageField.disabled = false
-            document.querySelector(".chat-field").classList.remove("mdc-text-field--disabled")
             messageField.value = ""
-            console.log("🎉 You successfully sent a message.")
+            console.log("🎉 Sent message")
             await getMessages()
+            await getBalance()
         } catch (error) {
             console.log(`⚠️ ${error}.`)
         }
+        sendButton.style.display = ''
+        payButton.style.display = ''
+        messageField.disabled = false
+        isTransacting = false
+        document.querySelector(".chat-field").classList.remove("mdc-text-field--disabled")
     }
 })
 
-
-// document
-//     .querySelector("#openChatBtn")
-// .addEventListener("click", () => {
-//     const _product = {
-//         owner: "0x2EF48F32eB0AEB90778A2170a0558A941b72BFFb",
-//         name: document.getElementById("newProductName").value,
-//         image: document.getElementById("newImgUrl").value,
-//         description: document.getElementById("newProductDescription").value,
-//         location: document.getElementById("newLocation").value,
-//         price: document.getElementById("newPrice").value,
-//         sold: 0,
-//         index: products.length,
-//     }
-//     products.push(_product)
-//     notification(`🎉 You successfully added "${_product.name}".`)
-//     renderProducts()
-// })
-
-// document.querySelector("#marketplace").addEventListener("click", async (e) => {
-//     if (e.target.className.includes("buyBtn")) {
-//         const index = e.target.id
-//         console.log("⌛ Waiting for payment approval...")
-//         try {
-//             await approve(messages[index].price)
-//         } catch (error) {
-//             console.log(`⚠️ ${error}.`)
-//         }
-//         console.log(`⌛ Awaiting payment for "${products[index].name}"...`)
-//         try {
-//             const result = await contract.methods
-//                 .buyProduct(index)
-//                 .send({from: kit.defaultAccount})
-//             console.log(`🎉 You successfully bought "${products[index].name}".`)
-//             getProducts()
-//             getBalance()
-//         } catch (error) {
-//             console.log(`⚠️ ${error}.`)
-//         }
-//     }
-// })
+payButton.addEventListener("click", async (e) => {
+    console.log("⌛ Waiting for payment approval...")
+    sendButton.style.display = 'none'
+    payButton.style.display = 'none'
+    messageField.disabled = true
+    isTransacting = true
+    dialog.open()
+    let price
+    await new Promise((resolve, reject) => {
+        document.querySelector('.mdc-dialog').addEventListener("click", (e) => {
+            if (e.path.includes(document.querySelector("[data-mdc-dialog-action=accept]"))) {
+                price = new BigNumber(paymentField.value)
+                price = price.shiftedBy(ERC20_DECIMALS)
+            }
+            resolve()
+        })
+    })
+    try {
+        await approve(price)
+    } catch (error) {
+        console.log(`⚠️ ${error}.`)
+    }
+    console.log("⌛ Awaiting payment...")
+    try {
+        await contract.methods
+            .transferFunds(price)
+            .send({from: kit.defaultAccount})
+        console.log("🎉 Transferred funds")
+        await getMessages()
+        await getBalance()
+    } catch (error) {
+        console.log(`⚠️ ${error}.`)
+    }
+    sendButton.style.display = ''
+    payButton.style.display = ''
+    messageField.disabled = false
+    isTransacting = false
+    document.querySelector(".chat-field").classList.remove("mdc-text-field--disabled")
+})
 
 
 // initializes application
@@ -263,4 +310,5 @@ window.addEventListener('load', async () => {
     isWaiting = await contract.methods.isWaiting().call()
     if (!isWaiting) document.querySelector("#topBtn").disabled = false
     await checkAddressAssignment()
+    await messagesRefresh()
 })

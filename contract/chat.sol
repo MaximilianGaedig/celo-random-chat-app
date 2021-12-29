@@ -91,7 +91,7 @@ contract Chat {
                 ),
                 "Transfer failed."
             );
-            writeMessage(string(abi.encodePacked("You received ", uint2str(_amount))));
+            writeMessage(string(abi.encodePacked("cUSD--", uint2str(_amount))));
         }
 
     }

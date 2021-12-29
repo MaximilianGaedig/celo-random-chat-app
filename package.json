@@ -2,6 +2,7 @@
   "main": "index.js",
   "dependencies": {
     "@celo/contractkit": "^1.0.2",
+    "@material/dialog": "^13.0.0",
     "@material/ripple": "^13.0.0",
     "@material/textfield": "^13.0.0",
     "bignumber.js": "^9.0.1",
