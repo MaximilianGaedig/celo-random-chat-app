@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress CssUnusedSymbol, HtmlUnknownTag -->
 <html lang="en">
 <head>
     <!-- Required meta tags -->
@@ -97,6 +98,17 @@
 
         .profile {
             height: 48px;
+        }
+        .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading, .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch, .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+            /*noinspection CssUnresolvedCustomProperty*/
+            border-color: var(--mdc-theme-outline, rgba(0, 0, 0, 0.38));
+        }
+        .mdc-text-field:not(.mdc-text-field--disabled) .mdc-floating-label {
+            /*noinspection CssUnresolvedCustomProperty*/
+            color: var(--mdc-theme-hint,rgba(0, 0, 0, 0.6));
+        }
+        .mdc-text-field--focused:not(.mdc-text-field--disabled) .mdc-floating-label {
+            color: var(--mdc-theme-primary);
         }
     </style>
 
