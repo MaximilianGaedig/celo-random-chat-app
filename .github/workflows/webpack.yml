@@ -20,7 +20,7 @@ jobs:
     - name: Build
       run: |
         npm install
-        npx webpack- name: GitHub Pages
+        npx webpack
     - name: Deploy to GitHub Pages
       uses: crazy-max/ghaction-github-pages@v2.5.0
       if: success()
