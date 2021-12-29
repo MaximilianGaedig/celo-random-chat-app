@@ -67,7 +67,7 @@ const renderMessages = (messages) => {
     let messagesString = ""
     messages.forEach((_message) => {
         const payment = _message.text.slice(0, 6) === 'cUSD--'
-        if (payment){
+        if (payment) {
             _message.text = new BigNumber(_message.text.slice(6))
             _message.text = _message.text.shiftedBy(-ERC20_DECIMALS) + "$"
         }
@@ -261,7 +261,7 @@ sendButton.addEventListener("click", async () => {
     }
 })
 
-payButton.addEventListener("click", async (e) => {
+payButton.addEventListener("click", async () => {
     console.log("⌛ Waiting for payment approval...")
     sendButton.style.display = 'none'
     payButton.style.display = 'none'
@@ -269,9 +269,9 @@ payButton.addEventListener("click", async (e) => {
     isTransacting = true
     dialog.open()
     let price
-    await new Promise((resolve, reject) => {
-        document.querySelector('.mdc-dialog').addEventListener("click", (e) => {
-            if (e.path.includes(document.querySelector("[data-mdc-dialog-action=accept]"))) {
+    await new Promise((resolve) => {
+        dialog.listen('MDCDialog:closing', (e) => {
+            if (e.detail.action === 'accept'){
                 price = new BigNumber(paymentField.value)
                 price = price.shiftedBy(ERC20_DECIMALS)
             }
