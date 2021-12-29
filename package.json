@@ -6,7 +6,6 @@
     "@material/ripple": "^13.0.0",
     "@material/textfield": "^13.0.0",
     "bignumber.js": "^9.0.1",
-    "material-components-web": "^13.0.0",
     "web3": "^1.6.1"
   },
   "devDependencies": {
