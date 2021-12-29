@@ -40,6 +40,7 @@
             display: flex;
             gap: 0.7rem;
             padding: 0.7rem;
+            align-items: flex-end;
         }
 
         .log {
@@ -59,6 +60,7 @@
             height: 100%;
             border-radius: 0.5rem;
             text-align: center;
+            flex-shrink: 2;
         }
 
         .chat-field {
@@ -71,6 +73,7 @@
             padding: 0.7rem;
             color: white;
             margin: 0.1rem;
+            overflow-wrap: anywhere;
         }
 
         .message.other {
@@ -125,7 +128,7 @@
       </span>
         <input type="text" class="mdc-text-field__input" aria-labelledby="chat-message-label" disabled>
     </label>
-    <button class="mdc-fab" aria-label="Send" disabled>
+    <button class="mdc-fab" aria-label="Send" style="display: none;">
         <div class="mdc-fab__ripple"></div>
         <span class="mdc-fab__icon material-icons">send</span>
     </button>

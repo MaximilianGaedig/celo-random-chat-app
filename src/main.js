@@ -146,7 +146,7 @@ const checkAddressAssignment = async () => {
             identiconTemplate(matchedAddress)
         document.querySelector("#status").textContent = "Unmatch with " + matchedAddress
         document.querySelector("#topBtn").disabled = false
-        submitButton.disabled = false
+        submitButton.style.display = ''
         messageField.disabled = false
         document.querySelector(".chat-field").classList.remove("mdc-text-field--disabled")
         isMatched = true
@@ -154,14 +154,14 @@ const checkAddressAssignment = async () => {
         document.querySelector("#otherPicture").innerHTML = ""
         document.querySelector("#status").textContent = "Waiting for address match with"
         document.querySelector("#topBtn").disabled = true
-        submitButton.disabled = true
+        submitButton.style.display = 'none'
         messageField.disabled = true
         isMatched = false
     } else {
         document.querySelector("#otherPicture").innerHTML = ""
         document.querySelector("#status").textContent = "Announce that you want a partner"
         document.querySelector("#topBtn").disabled = false
-        submitButton.disabled = true
+        submitButton.style.display = 'none'
         messageField.disabled = true
         isMatched = false
         isWaiting = false
@@ -192,23 +192,23 @@ document.querySelector("#topBtn").addEventListener("click", async () => {
 
 // sends a message on click of the send button
 submitButton.addEventListener("click", async () => {
-    if (messageField.value !== "") {
+    if (messageField.value) {
         console.log('⌛ Sending message...')
+        submitButton.style.display = 'none'
+        messageField.disabled = true
         try {
-            submitButton.disabled = true
-            messageField.disabled = true
             await contract.methods
                 .writeMessage(messageField.value)
                 .send({from: kit.defaultAccount})
-            submitButton.disabled = false
+            submitButton.style.display = ''
             messageField.disabled = false
             document.querySelector(".chat-field").classList.remove("mdc-text-field--disabled")
             messageField.value = ""
+            console.log("🎉 You successfully sent a message.")
+            await getMessages()
         } catch (error) {
             console.log(`⚠️ ${error}.`)
         }
-        console.log("🎉 You successfully sent a message.")
-        await getMessages()
     }
 })
 
