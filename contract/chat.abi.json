@@ -95,6 +95,13 @@
 	},
 	{
 		"inputs": [],
+		"name": "infoConsole",
+		"outputs": [],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "isAddressAssigned",
 		"outputs": [
 			{

@@ -2,6 +2,7 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
+import "hardhat/console.sol";
 
 interface IERC20Token {
     function transfer(address, uint256) external returns (bool);
@@ -24,15 +25,18 @@ contract Chat {
     address internal waitingAddress = 0x0000000000000000000000000000000000000000;
     address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
 
+
     struct Message {
         address sender;
         string text;
         uint timestamp;
     }
 
+
     mapping(address => address) internal addresses;
     mapping(address => mapping(uint => Message)) internal messages;
     mapping(address => uint) internal messageAmounts;
+
 
     // assigns an address to an address if there's one waiting,
     // if not, it makes the sender address the address that is waiting
@@ -45,6 +49,11 @@ contract Chat {
             waitingAddress = 0x0000000000000000000000000000000000000000;
         }
     }
+    // says if address is waiting
+    function isWaiting() public view returns (bool){
+        return msg.sender == waitingAddress;
+    }
+
     // returns a boolean that says if the adress has a recipient / is assigned
     function isAddressAssigned() public view returns (bool){
         return addresses[msg.sender] != 0x0000000000000000000000000000000000000000;
@@ -55,6 +64,11 @@ contract Chat {
         return addresses[msg.sender];
     }
 
+    function infoConsole() public view {
+        console.log(msg.sender);
+        console.log(addresses[msg.sender]);
+        console.log(addresses[addresses[msg.sender]]);
+    }
     // writes a message to someone
     function writeMessage(string memory _text) public {
         if (isAddressAssigned()) {
@@ -111,16 +125,18 @@ contract Chat {
     // removes a match
     function removeMatch() public {
         if (addresses[msg.sender] != 0x0000000000000000000000000000000000000000) {
-            delete addresses[msg.sender];
-            delete messageAmounts[msg.sender];
-            delete messageAmounts[addresses[msg.sender]];
-            for (uint i = messageAmounts[msg.sender]; i == 0; i--) {
+            // delete recived messages
+            for (uint i = 0; i == messageAmounts[msg.sender]; i++) {
                 delete messages[msg.sender][i];
             }
-            for (uint i = messageAmounts[addresses[msg.sender]]; i == 0; i--) {
+            // delete sent messages
+            for (uint i = 0; i == messageAmounts[addresses[msg.sender]]; i++) {
                 delete messages[addresses[msg.sender]][i];
             }
+            delete messageAmounts[addresses[msg.sender]];
+            delete messageAmounts[msg.sender];
             delete addresses[addresses[msg.sender]];
+            delete addresses[msg.sender];
         }
     }
 

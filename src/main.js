@@ -10,7 +10,7 @@ let contract
 let isMatched = false
 let isWaiting
 const ERC20_DECIMALS = 18
-const MPContractAddress = "0xd803473656Fffe95dE5bdc14721e88268836A99B"
+const MPContractAddress = "0x2C1F1ce45c9bD9c82F640183D9E8948782Fb40D8"
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"
 const messageLog = document.querySelector(".log")
 const messageField = document.querySelector(".mdc-text-field__input")
@@ -147,18 +147,22 @@ const checkAddressAssignment = async () => {
         document.querySelector("#status").textContent = "Unmatch with " + matchedAddress
         document.querySelector("#topBtn").disabled = false
         submitButton.disabled = false
+        messageField.disabled = false
+        document.querySelector(".chat-field").classList.remove("mdc-text-field--disabled")
         isMatched = true
     } else if (isWaiting) {
         document.querySelector("#otherPicture").innerHTML = ""
         document.querySelector("#status").textContent = "Waiting for address match with"
         document.querySelector("#topBtn").disabled = true
         submitButton.disabled = true
+        messageField.disabled = true
         isMatched = false
     } else {
         document.querySelector("#otherPicture").innerHTML = ""
         document.querySelector("#status").textContent = "Announce that you want a partner"
         document.querySelector("#topBtn").disabled = false
         submitButton.disabled = true
+        messageField.disabled = true
         isMatched = false
         isWaiting = false
     }
@@ -191,9 +195,14 @@ submitButton.addEventListener("click", async () => {
     if (messageField.value !== "") {
         console.log('⌛ Sending message...')
         try {
+            submitButton.disabled = true
+            messageField.disabled = true
             await contract.methods
                 .writeMessage(messageField.value)
                 .send({from: kit.defaultAccount})
+            submitButton.disabled = false
+            messageField.disabled = false
+            document.querySelector(".chat-field").classList.remove("mdc-text-field--disabled")
             messageField.value = ""
         } catch (error) {
             console.log(`⚠️ ${error}.`)
