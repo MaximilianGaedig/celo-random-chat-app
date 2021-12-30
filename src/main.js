@@ -305,10 +305,10 @@ payButton.addEventListener("click", async () => {
 // initializes application
 window.addEventListener('load', async () => {
     await connectCeloWallet()
-    await getMessages()
-    await getBalance()
     isWaiting = await contract.methods.isWaiting().call()
     if (!isWaiting) document.querySelector("#topBtn").disabled = false
     await checkAddressAssignment()
+    await getMessages()
+    await getBalance()
     await messagesRefresh()
 })
