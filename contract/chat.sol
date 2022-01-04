@@ -22,7 +22,7 @@ interface IERC20Token {
 }
 
 contract Chat {
-    address internal waitingAddress = 0x0000000000000000000000000000000000000000;
+    address internal waitingAddress;
     address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
 
 
@@ -41,12 +41,12 @@ contract Chat {
     // assigns an address to an address if there's one waiting,
     // if not, it makes the sender address the address that is waiting
     function assignAddress() public {
-        if (waitingAddress == 0x0000000000000000000000000000000000000000) {
+        if (waitingAddress == address(0)) {
             waitingAddress = msg.sender;
         } else if (waitingAddress != msg.sender) {
             addresses[msg.sender] = waitingAddress;
             addresses[waitingAddress] = msg.sender;
-            waitingAddress = 0x0000000000000000000000000000000000000000;
+            waitingAddress = address(0);
         }
     }
     // says if address is waiting
@@ -54,9 +54,9 @@ contract Chat {
         return msg.sender == waitingAddress;
     }
 
-    // returns a boolean that says if the adress has a recipient / is assigned
+    // returns a boolean that says if the address has a recipient / is assigned
     function isAddressAssigned() public view returns (bool){
-        return addresses[msg.sender] != 0x0000000000000000000000000000000000000000;
+        return addresses[msg.sender] != address(0);
     }
 
     // returns assigned address
@@ -124,7 +124,7 @@ contract Chat {
 
     // removes a match
     function removeMatch() public {
-        if (addresses[msg.sender] != 0x0000000000000000000000000000000000000000) {
+        if (addresses[msg.sender] != address(0)) {
             // delete recived messages
             for (uint i = 0; i == messageAmounts[msg.sender]; i++) {
                 delete messages[msg.sender][i];
