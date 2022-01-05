@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--suppress CssUnusedSymbol, HtmlUnknownTag -->
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <!-- CSS -->
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --mdc-theme-primary: darkblue;
+            --mdc-theme-secondary: cornflowerblue;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .header {
+            display: flex;
+            gap: 0.7rem;
+            padding: 0.7rem;
+            background: lightgray;
+            justify-content: space-between;
+            align-items: center;
+            overflow-wrap: anywhere;
+        }
+
+        .message-box {
+            display: flex;
+            gap: 0.7rem;
+            padding: 0.7rem;
+            align-items: flex-end;
+        }
+
+        .log {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 0.7rem;
+            overflow: auto;
+        }
+
+        .balance {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: lightgray;
+            padding: 0 0.7rem;
+            height: 100%;
+            border-radius: 0.5rem;
+            text-align: center;
+            flex-shrink: 2;
+        }
+
+        .chat-field {
+            flex-grow: 1;
+        }
+
+        .message {
+            width: fit-content;
+            border-radius: 0.7rem;
+            padding: 0.7rem;
+            color: white;
+            margin: 0.1rem;
+            overflow-wrap: anywhere;
+        }
+
+        .message.other {
+            background-color: cornflowerblue;
+        }
+
+        .message.you {
+            background-color: darkblue;
+            align-self: flex-end;
+        }
+
+        .message.payment {
+            font-size: xx-large;
+            font-weight: bold;
+            color: #e91e63;
+        }
+
+        .otherPicture {
+            float: right;
+        }
+
+        .profile {
+            height: 48px;
+        }
+        .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading, .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch, .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+            /*noinspection CssUnresolvedCustomProperty*/
+            border-color: var(--mdc-theme-outline, rgba(0, 0, 0, 0.38));
+        }
+        .mdc-text-field:not(.mdc-text-field--disabled) .mdc-floating-label {
+            /*noinspection CssUnresolvedCustomProperty*/
+            color: var(--mdc-theme-hint,rgba(0, 0, 0, 0.6));
+        }
+        .mdc-text-field--focused:not(.mdc-text-field--disabled) .mdc-floating-label {
+            color: var(--mdc-theme-primary);
+        }
+    </style>
+
+    <title>Random chat app</title>
+</head>
+
+<body>
+<div class="header">
+    <div id="youPicture" class="profile"></div>
+    <div>
+        <button class="mdc-button mdc-button--outlined" id="topBtn" disabled>
+            <span class="mdc-button__ripple"></span>
+            <span class="mdc-button__label" id="status">Announce that you want a partner</span>
+        </button>
+    </div>
+    <div id="otherPicture" class="profile"></div>
+</div>
+<div class="log"></div>
+<div class="message-box">
+    <div class="balance">
+        <div id="cleoBal">
+            Celo: _.__
+        </div>
+        <div id="cUSDBal">
+            cUSD: _.__
+        </div>
+    </div>
+    <label class="chat-field mdc-text-field mdc-text-field--outlined">
+      <span class="mdc-notched-outline">
+        <span class="mdc-notched-outline__leading"></span>
+        <span class="mdc-notched-outline__notch">
+          <span class="mdc-floating-label" id="chat-message-label">Chat message</span>
+        </span>
+        <span class="mdc-notched-outline__trailing"></span>
+      </span>
+        <input type="text" class="mdc-text-field__input" aria-labelledby="chat-message-label" disabled>
+    </label>
+    <button class="mdc-fab" id="payBtn" aria-label="Pay" style="display: none;">
+        <div class="mdc-fab__ripple"></div>
+        <span class="mdc-fab__icon material-icons">payment</span>
+    </button>
+    <button class="mdc-fab" id="sendBtn" aria-label="Send" style="display: none;">
+        <div class="mdc-fab__ripple"></div>
+        <span class="mdc-fab__icon material-icons">send</span>
+    </button>
+</div>
+<div class="mdc-dialog">
+    <div class="mdc-dialog__container">
+        <div class="mdc-dialog__surface"
+             role="alertdialog"
+             aria-modal="true"
+             aria-labelledby="my-dialog-title"
+             aria-describedby="my-dialog-content">
+            <!-- Title cannot contain leading whitespace due to mdc-typography-baseline-top() -->
+            <h2 class="mdc-dialog__title" id="my-dialog-title"><!--
+             -->Payment amount in cUSD<!--
+           --></h2>
+            <div class="mdc-dialog__content" id="my-dialog-content" style="padding-top: 10px;">
+                <label class="chat-field mdc-text-field mdc-text-field--outlined">
+                  <span class="mdc-notched-outline">
+                    <span class="mdc-notched-outline__leading"></span>
+                    <span class="mdc-notched-outline__notch">
+                      <span class="mdc-floating-label" id="price-label">cUSD amount</span>
+                    </span>
+                    <span class="mdc-notched-outline__trailing"></span>
+                  </span>
+                    <input type="number" class="mdc-text-field__input" aria-labelledby="price-label">
+                </label>
+            </div>
+            <div class="mdc-dialog__actions">
+                <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">Cancel</span>
+                </button>
+                <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="accept">
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">OK</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="mdc-dialog__scrim"></div>
+</div>
+<script src="https://unpkg.com/ethereum-blockies@0.1.1/blockies.min.js"></script>
+<script type="text/javascript" src="main.js"></script></body>
+</html>
