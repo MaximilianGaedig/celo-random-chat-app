@@ -9,7 +9,11 @@ interface IERC20Token {
 
     function approve(address, uint256) external returns (bool);
 
-    function transferFrom(address, address, uint256) external returns (bool);
+    function transferFrom(
+        address,
+        address,
+        uint256
+    ) external returns (bool);
 
     function totalSupply() external view returns (uint256);
 
@@ -18,7 +22,11 @@ interface IERC20Token {
     function allowance(address, address) external view returns (uint256);
 
     event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 }
 
 library SafeMath {
@@ -63,7 +71,11 @@ library SafeMath {
      *
      * - Subtraction cannot overflow.
      */
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function sub(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         uint256 c = a - b;
 
@@ -122,7 +134,11 @@ library SafeMath {
      *
      * - The divisor cannot be zero.
      */
-    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function div(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         uint256 c = a / b;
         // assert(a == b * c + a % b); // There is no case in which this doesn't hold
@@ -158,7 +174,11 @@ library SafeMath {
      *
      * - The divisor cannot be zero.
      */
-    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+    function mod(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
         require(b != 0, errorMessage);
         return a % b;
     }
@@ -166,20 +186,19 @@ library SafeMath {
 
 contract Chat {
     address internal waitingAddress;
-    address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
-    using SafeMath for uint;
+    address internal cUsdTokenAddress =
+        0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
+    using SafeMath for uint256;
 
     struct Message {
         address sender;
         string text;
-        uint timestamp;
+        uint256 timestamp;
     }
 
-
     mapping(address => address) internal addresses;
-    mapping(address => mapping(uint => Message)) internal messages;
-    mapping(address => uint) internal messageAmounts;
-
+    mapping(address => mapping(uint256 => Message)) internal messages;
+    mapping(address => uint256) internal messageAmounts;
 
     // assigns an address to an address if there's one waiting,
     // if not, it makes the sender address the address that is waiting
@@ -192,18 +211,19 @@ contract Chat {
             waitingAddress = address(0);
         }
     }
+
     // says if address is waiting
-    function isWaiting() public view returns (bool){
+    function isWaiting() public view returns (bool) {
         return msg.sender == waitingAddress;
     }
 
     // returns a boolean that says if the address has a recipient / is assigned
-    function isAddressAssigned() public view returns (bool){
+    function isAddressAssigned() public view returns (bool) {
         return addresses[msg.sender] != address(0);
     }
 
     // returns assigned address
-    function getAssignedAddress() public view returns (address){
+    function getAssignedAddress() public view returns (address) {
         return addresses[msg.sender];
     }
 
@@ -212,6 +232,7 @@ contract Chat {
         console.log(addresses[msg.sender]);
         console.log(addresses[addresses[msg.sender]]);
     }
+
     // writes a message to someone
     function writeMessage(string memory _text) public {
         if (isAddressAssigned()) {
@@ -223,8 +244,9 @@ contract Chat {
             );
         }
     }
+
     // transfers funds and sends a confirmation message to someone
-    function transferFunds(uint _amount) public payable {
+    function transferFunds(uint256 _amount) public payable {
         if (isAddressAssigned()) {
             require(
                 IERC20Token(cUsdTokenAddress).transferFrom(
@@ -236,32 +258,39 @@ contract Chat {
             );
             writeMessage(string(abi.encodePacked("cUSD--", uint2str(_amount))));
         }
-
     }
 
     // gets the length of the received message mapping of an adress
-    function getReceivedMessageCount() public view returns (uint){
+    function getReceivedMessageCount() public view returns (uint256) {
         return (messageAmounts[msg.sender]);
     }
 
     // gets the length of the sent message mapping of an adress
-    function getSentMessageCount() public view returns (uint){
+    function getSentMessageCount() public view returns (uint256) {
         return (messageAmounts[addresses[msg.sender]]);
     }
 
     // gets a received message based on index
-    function getReceivedMessage(uint _index) public view returns (string memory, uint){
+    function getReceivedMessage(uint256 _index)
+        public
+        view
+        returns (string memory, uint256)
+    {
         return (
-        messages[msg.sender][_index].text,
-        messages[msg.sender][_index].timestamp
+            messages[msg.sender][_index].text,
+            messages[msg.sender][_index].timestamp
         );
     }
 
     // gets a sent message based on index
-    function getSentMessage(uint _index) public view returns (string memory, uint){
+    function getSentMessage(uint256 _index)
+        public
+        view
+        returns (string memory, uint256)
+    {
         return (
-        messages[addresses[msg.sender]][_index].text,
-        messages[addresses[msg.sender]][_index].timestamp
+            messages[addresses[msg.sender]][_index].text,
+            messages[addresses[msg.sender]][_index].timestamp
         );
     }
 
@@ -269,11 +298,15 @@ contract Chat {
     function removeMatch() public {
         if (addresses[msg.sender] != address(0)) {
             // delete recived messages
-            for (uint i = 0; i == messageAmounts[msg.sender]; i++) {
+            for (uint256 i = 0; i == messageAmounts[msg.sender]; i++) {
                 delete messages[msg.sender][i];
             }
             // delete sent messages
-            for (uint i = 0; i == messageAmounts[addresses[msg.sender]]; i++) {
+            for (
+                uint256 i = 0;
+                i == messageAmounts[addresses[msg.sender]];
+                i++
+            ) {
                 delete messages[addresses[msg.sender]][i];
             }
             delete messageAmounts[addresses[msg.sender]];
@@ -284,21 +317,25 @@ contract Chat {
     }
 
     // converts a number into a string
-    function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
+    function uint2str(uint256 _i)
+        internal
+        pure
+        returns (string memory _uintAsString)
+    {
         if (_i == 0) {
             return "0";
         }
-        uint j = _i;
-        uint len;
+        uint256 j = _i;
+        uint256 len;
         while (j != 0) {
             len++;
             j /= 10;
         }
         bytes memory bstr = new bytes(len);
-        uint k = len;
+        uint256 k = len;
         while (_i != 0) {
             k = k - 1;
-            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+            uint8 temp = (48 + uint8(_i - (_i / 10) * 10));
             bytes1 b1 = bytes1(temp);
             bstr[k] = b1;
             _i /= 10;
