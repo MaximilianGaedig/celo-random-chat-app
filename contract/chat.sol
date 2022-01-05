@@ -227,12 +227,6 @@ contract Chat {
         return addresses[msg.sender];
     }
 
-    function infoConsole() public view {
-        console.log(msg.sender);
-        console.log(addresses[msg.sender]);
-        console.log(addresses[addresses[msg.sender]]);
-    }
-
     // writes a message to someone
     function writeMessage(string memory _text) public {
         if (isAddressAssigned()) {
