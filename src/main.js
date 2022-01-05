@@ -6,6 +6,7 @@ import {MDCTextField} from '@material/textfield';
 import {MDCRipple} from '@material/ripple';
 import {MDCDialog} from '@material/dialog';
 import BigNumber from "bignumber.js";
+import {chatContractAddress, ERC20_DECIMALS, cUSDContractAddress} from "./utils/constants";
 
 let kit
 let contract
@@ -13,9 +14,7 @@ let isMatched = false
 let isWaiting
 let isTransacting
 let lastMessages
-const ERC20_DECIMALS = 18
-const chatContractAddress = "0x02ef2b5CaC2e023d0771900C34942af4d0c55798"
-const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"
+
 const messageLog = document.querySelector(".log")
 const messageField = document.querySelector("[aria-labelledby=chat-message-label]")
 const paymentField = document.querySelector("[aria-labelledby=price-label]")
